@@ -2,34 +2,42 @@
 
 pragma solidity ^0.8.0;
 
-contract MyContract { 
+contract Ownable{
+    address owner;
 
-  // Conditionals
-
-  address public owner;
-
-  constructor(){
-    owner = msg.sender;
-  }
-
-  uint[] public numbers = [1,2,3,4,5,6,7,8,9,10];
-
-  function isEvenNumber(uint _number) public pure returns (bool) {
-    return (_number % 2 == 0);
-  }
-
-  // Loops
-
-  function countEvenNumbers() public view returns(uint){
-    uint count = 0;
-    for (uint i=0; i<numbers.length ; ++i) {
-        if(isEvenNumber(numbers[i])) count++;
+    modifier onlyOwner(){
+        require(msg.sender == owner,"Only owner can call this!");
+        _;
     }
 
-    return count;
-  }
+    constructor() {
+        owner = msg.sender;
+    }
+}
 
-  function isOwner() public view returns(bool){
-    return (msg.sender == owner);
-  }
+contract SecretVault{
+    string secret;
+
+    constructor(string memory _secret) {
+        secret = _secret;
+    }
+
+    function getSecret() public view returns (string memory){
+        return secret;
+    }
+
+}
+
+contract MyContract is Ownable{ 
+
+    address secretVault;
+    
+    constructor(string memory _secret) {
+        SecretVault _secretVault = new SecretVault(_secret);
+        secretVault = address(_secretVault);
+    }
+
+    function getSecret() public view onlyOwner returns (string memory){
+       return SecretVault(address(secretVault)).getSecret(); 
+    }
 }
